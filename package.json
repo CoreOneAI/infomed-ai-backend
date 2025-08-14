@@ -1,5 +1,5 @@
 {
-  "name": "infomed-backend",
+  "name": "infomed-ai-backend",
   "private": true,
   "engines": { "node": "20" },
   "scripts": { "start": "node server.js" },
