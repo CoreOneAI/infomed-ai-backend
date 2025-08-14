@@ -1,10 +1,10 @@
 {
-  "name": "functions",
+  "name": "infomed-backend",
   "private": true,
-  "main": "index.js",
   "engines": { "node": "20" },
+  "scripts": { "start": "node server.js" },
   "dependencies": {
-    "firebase-functions": "^5.0.1",
-    "firebase-admin": "^12.5.0"
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
   }
 }
