@@ -1,0 +1,2235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="app-specialty" content="Pediatrics">
+  <meta charset="UTF-8" />
+  <meta name="app-specialty" content="Orthopedics">
+  <title>InfoHealth AI – General Medicine</title>
+  <link rel="icon" href="logo-silver.png" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 25%, #3c3c3c 50%, #2a2a2a 75%, #000000 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .mobile-frame {
+      width: 100%;
+      max-width: 380px;
+      height: 90vh;
+      max-height: 800px;
+      background: linear-gradient(145deg, #000000 0%, #1a1a1a 50%, #2c2c2c 100%);
+      border-radius: 35px;
+      padding: 8px;
+      box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 30px rgba(218, 165, 32, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mobile-frame::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 4px;
+      background: linear-gradient(90deg, #333 0%, #555 50%, #333 100%);
+      border-radius: 2px;
+      z-index: 10;
+    }
+
+    .wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 27px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2c2c2c 100%);
+      padding: 1rem 1rem 0.5rem 1rem;
+      text-align: center;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .translate-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+      color: white;
+      border: none;
+      padding: 0.3rem 0.6rem;
+      border-radius: 15px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(218, 165, 32, 0.3);
+      transition: all 0.2s ease;
+      z-index: 10;
+    }
+    
+    .translate-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(218, 165, 32, 0.4);
+    }
+    
+    .translate-btn.active {
+      background: linear-gradient(135deg, #B8860B 0%, #8B6914 100%);
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(255,255,255,0.05) 0%, transparent 50%, rgba(218,165,32,0.1) 100%);
+      pointer-events: none;
+    }
+    
+    .header img {
+      height: 80px;
+      max-width: 90%;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+      position: relative;
+      z-index: 1;
+    }
+
+    .cards-container {
+      background: #f8f9fa;
+      padding: 0.5rem;
+      border-bottom: 2px solid #e0e0e0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .cards-section {
+      margin-bottom: 0.4rem;
+    }
+    .cards-section:last-child {
+      margin-bottom: 0;
+    }
+    .cards-section h3 {
+      margin: 0 0 0.3rem 0;
+      color: #333;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.25rem;
+    }
+    .card {
+      background: white;
+      padding: 0.4rem 0.2rem;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      border: 1px solid #e0e0e0;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      line-height: 1.1;
+    }
+
+    .card:hover { 
+      transform: translateY(-1px); 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      border-color: #DAA520;
+    }
+
+    .chat {
+      flex: 1;
+      padding: 0.8rem !important;
+      overflow-y: auto;
+      background: white;
+    }
+    .bubble-wrapper {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.8rem;
+      align-items: flex-end;
+    }
+    .bubble-wrapper.user {
+      flex-direction: row-reverse;
+    }
+    .avatar img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+      padding: 2px;
+      border: 1px solid rgba(218, 165, 32, 0.3);
+    }
+    .message {
+      padding: 0.6rem 0.8rem;
+      border-radius: 12px;
+      max-width: 75%;
+      line-height: 1.5;
+      font-size: 0.9rem;
+      word-wrap: break-word;
+    }
+    
+    .message ul, .message ol {
+      margin: 0.5rem 0;
+      padding-left: 1.2rem;
+      list-style-position: inside;
+    }
+    
+    .message li {
+      margin-bottom: 0.4rem;
+      line-height: 1.4;
+      list-style-type: disc;
+    }
+    
+    .message p {
+      margin: 0.5rem 0;
+      line-height: 1.4;
+    }
+    
+    .message strong {
+      display: block;
+      margin: 0.8rem 0 0.4rem 0;
+      color: #DAA520;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 0.2rem;
+    }
+    .user .message {
+      background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+    }
+    .bot .message {
+      background: #f8f9fa;
+      color: #333;
+      border: 1px solid #e0e0e0;
+    }
+    
+    .welcome-message {
+      text-align: center;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: #555;
+      padding: 0.8rem 1rem;
+      list-style: none !important;
+    }
+    
+    .welcome-message * {
+      list-style: none !important;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .welcome-message::before,
+    .welcome-message::after {
+      content: none !important;
+    }
+
+    .ai-status {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      margin: 0.5rem auto 0 auto;
+      display: inline-block;
+      box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+    }
+
+    .input-area {
+      display: flex;
+      padding: 0.8rem;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 20px;
+      border: 1px solid #e0e0e0;
+      outline: none;
+      font-size: 0.9rem;
+    }
+    .input-area input:focus {
+      border-color: #DAA520;
+    }
+    .input-area button {
+      margin-left: 0.6rem;
+      background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px rgba(218, 165, 32, 0.3);
+    }
+
+    /* Form styles */
+    .form-container {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+      border: 1px solid #e0e0e0;
+    }
+    .form-container h3 {
+      margin: 0 0 0.8rem 0;
+      color: #333;
+      font-size: 1rem;
+    }
+    .form-group {
+      margin-bottom: 0.8rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+      color: #555;
+      font-size: 0.85rem;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: #DAA520;
+    }
+    .btn {
+      background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      margin-right: 0.4rem;
+      font-size: 0.75rem;
+      box-shadow: 0 2px 6px rgba(218, 165, 32, 0.3);
+    }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    
+    .btn-home {
+      background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.75rem;
+      box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3);
+    }
+    
+    .btn-home:hover {
+      background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+      transform: translateY(-1px);
+    }
+
+    /* Modal styles for appointment popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 90%;
+      width: 320px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .appointment-item {
+      background: white;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border-left: 4px solid #0d47a1;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .appointment-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      border-left-color: #DAA520;
+    }
+    
+    .appointment-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+    
+    .appointment-doctor {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 2px;
+    }
+    
+    .appointment-type {
+      font-size: 0.75rem;
+      color: #666;
+      text-transform: uppercase;
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    
+    .appointment-datetime {
+      color: #0d47a1;
+      font-weight: 500;
+      margin: 4px 0;
+    }
+    
+    .appointment-location {
+      color: #666;
+      font-size: 0.8rem;
+      margin: 2px 0;
+    }
+    
+    .appointment-notes {
+      color: #888;
+      font-size: 0.8rem;
+      font-style: italic;
+      margin-top: 4px;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .btn-edit {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      flex: 1;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+    }
+    
+    .btn-cancel {
+      background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+      flex: 1;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+    }
+    
+    /* Calendar grid styles */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      margin: 1rem 0;
+      background: #f0f0f0;
+      border-radius: 8px;
+      padding: 4px;
+    }
+    
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      padding: 0 0.5rem;
+    }
+    
+    .calendar-nav {
+      background: #DAA520;
+      color: white;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    
+    .calendar-nav:hover {
+      background: #B8860B;
+    }
+    
+    .calendar-month-year {
+      font-weight: 600;
+      color: #333;
+      font-size: 1rem;
+    }
+    
+    .calendar-day-header {
+      text-align: center;
+      font-weight: 600;
+      color: #666;
+      padding: 8px 4px;
+      font-size: 0.7rem;
+      background: #e9ecef;
+    }
+    
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      font-size: 0.8rem;
+      cursor: pointer;
+      position: relative;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .calendar-day:hover {
+      background: #f8f9fa;
+      transform: scale(1.05);
+    }
+    
+    .calendar-day.other-month {
+      color: #ccc;
+      background: #f8f9fa;
+    }
+    
+    .calendar-day.today {
+      background: #DAA520;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .calendar-day.has-appointment {
+      background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
+      color: white;
+      font-weight: bold;
+    }
+    
+    .calendar-day.has-appointment.today {
+      background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+    }
+    
+    .calendar-day.has-appointment::after {
+      content: '📋';
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      font-size: 0.6rem;
+    }
+    
+    .appointment-popup {
+      position: absolute;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 0.8rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 100;
+      max-width: 250px;
+      font-size: 0.8rem;
+    }
+    
+    /* Medical info styles */
+    .info-section {
+      background: white;
+      margin: 0.5rem 0;
+      padding: 0.8rem;
+      border-radius: 8px;
+      border-left: 3px solid #28a745;
+    }
+    
+    .info-section h4 {
+      margin: 0 0 0.5rem 0;
+      color: #28a745;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    
+    .info-item {
+      background: #f8f9fa;
+      padding: 0.5rem;
+      margin: 0.3rem 0;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .medication-item {
+      border-left: 3px solid #17a2b8;
+    }
+    
+    .medication-time {
+      background: #17a2b8;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 450px) {
+      body {
+        padding: 10px;
+      }
+      .mobile-frame {
+        max-width: 100%;
+        height: 95vh;
+        border-radius: 25px;
+      }
+      .wrapper {
+        border-radius: 17px;
+      }
+      .modal-content {
+        width: 95%;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-frame">
+    <div class="wrapper">
+      <div class="header">
+        <button class="translate-btn" id="translateBtn" onclick="toggleLanguage()">Español</button>
+        <img src="infohealth-logo.png" alt="InfoHealth AI Logo" style="height: 80px; max-width: 90%; object-fit: contain;">
+      </div>
+
+      <div class="cards-container">
+        <div class="cards-section">
+          <h3>Medical Conditions</h3>
+          <div class="cards">
+            <div class="card" onclick="sendMessage('What is hypertension and how is it treated?')">Hypertension</div>
+            <div class="card" onclick="sendMessage('Explain high cholesterol causes and treatments')">Cholesterol</div>
+            <div class="card" onclick="sendMessage('How is asthma diagnosed and managed?')">Asthma</div>
+            <div class="card" onclick="sendMessage('What is diabetes and how do I manage blood sugar?')">Diabetes</div>
+          </div>
+        </div>
+
+        <div class="cards-section">
+          <h3>Health Management</h3>
+          <div class="cards">
+            <div class="card" onclick="showCalendar()">Calendar</div>
+            <div class="card" onclick="showMyInfo()">My Info</div>
+            <div class="card" onclick="showAppointments()">Appointments</div>
+            <div class="card" onclick="showMedications()">Medications</div>
+          </div>
+        </div>
+
+        <div class="cards-section">
+          <h3>Health Tools</h3>
+          <div class="cards">
+            <div class="card" onclick="showDrugChecker()">Drug Checker</div>
+            <div class="card" onclick="showHealthTracker()">Health Tracker</div>
+            <div class="card" onclick="showReminders()">Reminders</div>
+            <div class="card" onclick="showEmergencyInfo()">Emergency</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat" id="chatBox">
+        <div style="display: flex; align-items: flex-start; margin-bottom: 0.8rem; justify-content: flex-start;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; margin-right: 0.4rem;">
+            <img src="infohealth-logo-small.png" alt="InfoHealth AI" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>
+          <div style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 12px; padding: 12px 16px; max-width: calc(75% - 32px); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.4; color: #555; box-sizing: border-box;">
+            <span style="display: block; text-align: center; width: 100%;">Welcome to InfoHealth AI. I provide health information for educational purposes. Always consult healthcare professionals for diagnosis and treatment.</span>
+            <div class="ai-status" id="aiStatus">📚 Knowledge-Based Responses</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input type="text" id="userInput" placeholder="Ask a medical question..." />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Ensure ALL code waits for DOM to be ready
+    (function() {
+      let isAppInitialized = false;
+
+      function initializeApp() {
+        if (isAppInitialized) return;
+        isAppInitialized = true;
+
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        
+        // Ensure elements exist before proceeding
+        if (!chatBox || !userInput) {
+          console.error('Required elements not found');
+          return;
+        }
+        
+        let isProcessing = false;
+
+      // Simple toggle language function
+      function toggleLanguage() {
+        const comingSoonMessage = "**Traducción al Español - Próximamente**\n\nLa función de traducción completa estará disponible pronto. Por ahora, puede continuar usando InfoHealth AI en inglés para obtener información médica precisa.\n\n*Complete Spanish translation feature coming soon. You can continue using InfoHealth AI in English for accurate medical information.*";
+        addBubble(comingSoonMessage, 'bot', true);
+      }
+
+      // Local Storage Functions
+      function saveToLocal(key, data) {
+        try {
+          localStorage.setItem('infohealth_' + key, JSON.stringify(data));
+        } catch(e) {
+          console.warn('localStorage not available');
+        }
+      }
+
+      function getFromLocal(key) {
+        try {
+          const data = localStorage.getItem('infohealth_' + key);
+          if (data) {
+            return JSON.parse(data);
+          }
+        } catch(e) {
+          console.warn('localStorage not available');
+        }
+        if (key === 'myInfo') return {};
+        return [];
+      }
+
+      // Typewriter effect function
+      function typeWriter(element, text, speed = 40) {
+        let i = 0;
+        element.innerHTML = '';
+        function type() {
+          if (i < text.length) {
+            element.innerHTML += text.charAt(i);
+            i++;
+            setTimeout(type, speed);
+          }
+        }
+        type();
+      }
+
+      // Add message with typewriter effect
+      function addBubble(text, role, useTypewriter = false) {
+        const wrap = document.createElement('div');
+        wrap.className = `bubble-wrapper ${role}`;
+
+        const avatar = role === 'user' 
+          ? 'infohealth-user-logo.png'
+          : 'infohealth-logo-small.png';
+
+        wrap.innerHTML = `
+          <div class="avatar"><img src="${avatar}" alt="${role}" /></div>
+          <div class="message"></div>`;
+
+        chatBox.appendChild(wrap);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        const messageElement = wrap.querySelector('.message');
+
+        if (useTypewriter && role === 'bot') {
+          typeWriter(messageElement, text, 30);
+        } else {
+          messageElement.innerHTML = text;
+        }
+      }
+
+      // Update AI status indicator
+      function updateAIStatus(status, type = 'success') {
+        const statusElement = document.getElementById('aiStatus');
+        if (statusElement) {
+          statusElement.textContent = status;
+          if (type === 'error') {
+            statusElement.style.background = 'linear-gradient(135deg, #dc3545 0%, #e74c3c 100%)';
+          } else if (type === 'warning') {
+            statusElement.style.background = 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)';
+          } else {
+            statusElement.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+          }
+        }
+      }
+
+      // Go back to home/welcome screen
+      window.goHome = function() {
+        clearAllChatMessages();
+      }
+
+      // Clear all chat messages except welcome message
+      function clearAllChatMessages() {
+        const allMessages = chatBox.querySelectorAll('.bubble-wrapper');
+        for (let i = 1; i < allMessages.length; i++) {
+          chatBox.removeChild(allMessages[i]);
+        }
+      }
+
+      // Enhanced medical response with drug interactions and diabetes focus
+      function getMedicalResponse(query, aiCategory = null) {
+        const disclaimer = "*Consult healthcare professionals for medical advice.*\n\n";
+        const queryLower = query.toLowerCase();
+        
+        // HYPERTENSION with Drug Interactions
+        if (queryLower.includes('hypertension') || queryLower.includes('blood pressure') || queryLower.includes('high pressure') || queryLower.includes('manage blood pressure') || queryLower.includes('bp')) {
+          return `${disclaimer}**Hypertension (High Blood Pressure)**
+
+**What It Is:**
+Blood pressure consistently 130/80 mmHg or higher. The "silent killer" because it often has no symptoms.
+
+**Risk Factors:**
+• Family history and genetics
+• Age (risk increases with age)  
+• Obesity and physical inactivity
+• High sodium diet and excessive alcohol
+• Smoking and chronic stress
+
+**Management:**
+• DASH diet (fruits, vegetables, whole grains)
+• Limit sodium to 2,300mg daily
+• Exercise 150 minutes weekly
+• Maintain healthy weight
+• Monitor blood pressure regularly
+
+**Common Medications:**
+• **ACE Inhibitors** (lisinopril, enalapril)
+• **ARBs** (losartan, valsartan)
+• **Diuretics** (hydrochlorothiazide, furosemide)
+• **Beta-blockers** (metoprolol, atenolol)
+• **Calcium Channel Blockers** (amlodipine, nifedipine)
+
+---
+
+**⚠️ DRUG INTERACTIONS:**
+• **NSAIDs** (ibuprofen, naproxen) - can reduce BP medication effectiveness
+• **Decongestants** (pseudoephedrine) - can raise blood pressure
+• **Salt substitutes** with potassium - dangerous with ACE inhibitors/ARBs
+• **Grapefruit juice** - affects calcium channel blockers
+• **Alcohol** - can enhance BP medication effects causing dizziness
+
+**Target:** Less than 130/80 mmHg for most adults`;
+        }
+
+        // CHOLESTEROL with Drug Interactions
+        if (queryLower.includes('cholesterol') || queryLower.includes('ldl') || queryLower.includes('hdl') || queryLower.includes('manage cholesterol') || queryLower.includes('statins')) {
+          return `${disclaimer}**High Cholesterol**
+
+**Types:**
+• LDL "bad" cholesterol - builds up in arteries
+• HDL "good" cholesterol - removes cholesterol
+• Triglycerides - blood fats that increase heart risk
+
+**Risk Factors:**
+• Genetics and family history
+• Diet high in saturated/trans fats
+• Lack of exercise and obesity
+• Smoking and diabetes
+
+**Management:**
+• Reduce saturated fats (red meat, full-fat dairy)
+• Increase soluble fiber (oats, beans, apples)
+• Exercise regularly and maintain healthy weight
+• Don't smoke and limit alcohol
+
+**Common Medications:**
+• **Statins** (atorvastatin, simvastatin, rosuvastatin)
+• **Bile Acid Sequestrants** (cholestyramine)
+• **Ezetimibe** (Zetia)
+• **PCSK9 Inhibitors** (evolocumab, alirocumab)
+
+---
+
+**⚠️ DRUG INTERACTIONS:**
+• **Grapefruit juice** - dangerous with statins, can cause muscle damage
+• **Warfarin** - statins can increase bleeding risk
+• **Digoxin** - levels can increase with some statins
+• **Cyclosporine** - increases statin toxicity risk
+• **Gemfibrozil** - very dangerous with statins, avoid combination
+
+---
+
+• **Antacids** - reduce absorption of some cholesterol medications
+
+**Target Levels:**
+• Total cholesterol: <200 mg/dL
+• LDL: <100 mg/dL  
+• HDL: >40 mg/dL (men), >50 mg/dL (women)
+• Triglycerides: <150 mg/dL`;
+        }
+
+        // ASTHMA with Drug Interactions
+        if (queryLower.includes('asthma') || queryLower.includes('inhaler') || queryLower.includes('wheezing') || queryLower.includes('manage asthma') || queryLower.includes('albuterol') || queryLower.includes('ventolin')) {
+          return `${disclaimer}**Asthma**
+
+**Common Symptoms:**
+• Wheezing and shortness of breath
+• Chest tightness and coughing
+• Difficulty speaking in full sentences
+
+**Common Triggers:**
+• Allergens: pollen, dust mites, pet dander
+• Irritants: smoke, pollution, strong scents
+• Weather changes and cold air
+• Exercise and respiratory infections
+
+**Management:**
+• Use controller medications daily as prescribed
+• Keep rescue inhaler always available
+• Avoid known triggers
+• Monitor peak flow if recommended
+• Get annual flu vaccination
+
+**Common Medications:**
+• **Rescue Inhalers** (albuterol/Ventolin, levalbuterol)
+• **Controller Inhalers** (fluticasone, budesonide, beclomethasone)
+• **Combination Inhalers** (Advair, Symbicort, Breo)
+• **Long-acting bronchodilators** (salmeterol, formoterol)
+
+---
+
+**⚠️ DRUG INTERACTIONS:**
+• **Beta-blockers** - can trigger severe asthma attacks, avoid if possible
+• **Aspirin/NSAIDs** - can trigger asthma attacks in sensitive people
+• **ACE inhibitors** - may cause cough that worsens asthma
+• **Some eye drops** (timolol) - contain beta-blockers, avoid
+• **Decongestants** - can interact with some asthma medications
+
+**Emergency Signs:**
+• Severe shortness of breath
+• Cannot speak in full sentences
+• Blue lips or fingernails
+• No improvement with rescue inhaler - CALL 911`;
+        }
+
+        // COMPREHENSIVE DIABETES with Drug Interactions
+        if (queryLower.includes('diabetes') || queryLower.includes('diabetic') || queryLower.includes('blood sugar') || queryLower.includes('glucose') || queryLower.includes('insulin') || queryLower.includes('a1c') || queryLower.includes('manage diabetes') || queryLower.includes('metformin')) {
+          return `${disclaimer}**Diabetes Management**
+
+**What Is Diabetes:**
+A condition where blood glucose (sugar) levels stay too high due to problems with insulin production or function.
+
+**Types:**
+• **Type 1** - Body doesn't make insulin (autoimmune)
+• **Type 2** - Body doesn't use insulin well (most common)
+• **Gestational** - Develops during pregnancy
+
+**Common Symptoms:**
+• Increased thirst and frequent urination
+• Unexplained weight loss or gain
+• Increased hunger and fatigue
+• Blurred vision and slow-healing sores
+• Frequent infections
+
+**Blood Sugar Management:**
+• **Target Before Meals:** 80-130 mg/dL
+• **Target 2 Hours After Meals:** Less than 180 mg/dL
+• **A1C Target:** Less than 7% for most adults
+• **Monitor regularly** with glucose meter or continuous monitor
+
+**Common Medications:**
+• **Metformin** - First-line for Type 2, reduces glucose production
+• **Insulin** (rapid, long-acting) - Essential for Type 1, sometimes Type 2
+• **Sulfonylureas** (glipizide, glyburide) - Stimulate insulin release
+• **GLP-1 Agonists** (semaglutide, liraglutide) - Improve insulin sensitivity
+• **SGLT-2 Inhibitors** (empagliflozin, canagliflozin) - Help kidneys remove glucose
+
+---
+
+**⚠️ DRUG INTERACTIONS:**
+• **Alcohol** - can cause dangerous low blood sugar, especially with insulin/sulfonylureas
+• **Beta-blockers** - can mask low blood sugar symptoms and affect glucose levels
+• **Steroids** (prednisone) - significantly raise blood sugar levels
+• **Diuretics** - can raise blood sugar and interact with diabetes medications
+• **Quinolone antibiotics** - can cause dangerous blood sugar swings
+
+---
+
+• **Warfarin** - diabetes medications can affect blood clotting
+• **Contrast dyes** - must stop metformin before procedures
+
+**Lifestyle Management:**
+• **Carbohydrate counting** and consistent meal timing
+• **Regular exercise** (150 minutes weekly)
+• **Weight management**
+• **Stress management** and adequate sleep
+• **Regular foot, eye, and kidney checkups**
+
+---
+
+**Complications Prevention:**
+• Keep blood sugar in target range
+• Control blood pressure (<130/80) and cholesterol
+• Don't smoke and limit alcohol
+• Take medications as prescribed
+• Regular medical monitoring
+
+**Emergency Situations:**
+• **Blood sugar >300 mg/dL** - Seek immediate care
+• **Signs of DKA:** Nausea, vomiting, fruity breath, confusion
+• **Severe low blood sugar:** Confusion, sweating, unconsciousness - Give glucose/call 911`;
+        }
+
+        // Enhanced keyword detection for diabetes-related queries
+        if (queryLower.includes('what is insulin') || queryLower.includes('insulin shots') || queryLower.includes('diabetic medication')) {
+          return `${disclaimer}**Insulin and Diabetes Medications**
+
+**What Is Insulin:**
+A hormone made by the pancreas that acts like a "key" to let glucose into your cells for energy.
+
+**Types of Insulin:**
+• **Rapid-acting** (lispro, aspart) - Works in 15 minutes, lasts 3-4 hours
+• **Short-acting** (regular insulin) - Works in 30 minutes, lasts 6-8 hours  
+• **Intermediate-acting** (NPH) - Works in 1-2 hours, lasts 12-18 hours
+• **Long-acting** (glargine, detemir) - Works in 1-2 hours, lasts 24+ hours
+
+---
+
+**Non-Insulin Medications:**
+• **Metformin** - Reduces glucose production by liver
+• **Sulfonylureas** - Help pancreas make more insulin
+• **GLP-1 agonists** - Slow digestion, reduce appetite
+• **SGLT-2 inhibitors** - Help kidneys remove excess glucose
+
+---
+
+**⚠️ Key Drug Interactions:**
+• **Alcohol + Insulin/Sulfonylureas** - Dangerous low blood sugar
+• **Steroids** - Significantly raise blood sugar
+• **Beta-blockers** - Can mask low blood sugar symptoms
+
+**Injection Tips:**
+• Rotate injection sites to prevent lipodystrophy
+• Store insulin properly (refrigerate unopened, room temp when in use)
+• Never share needles or insulin pens
+• Check expiration dates regularly`;
+        }
+
+        return `I specialize in **Hypertension, Cholesterol, Asthma, and Diabetes**.
+
+Try asking:
+• "How do I manage high blood pressure?"  
+• "What are drug interactions with statins?"
+• "How do I manage asthma?"
+• "What is insulin and how does it work?"
+• "What are diabetes medications?"
+
+Click the topic cards above for quick access!`;
+      }
+      
+
+      // Calendar Functions
+      let currentCalendarDate = new Date();
+
+      window.showCalendar = function() {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearAllChatMessages();
+        
+        addBubble('Calendar', 'user');
+        const calendarHTML = `
+          <div class="form-container">
+            <h3>My Calendar</h3>
+            <div class="calendar-header">
+              <button class="calendar-nav" onclick="changeMonth(-1)">‹ Prev</button>
+              <div class="calendar-month-year" id="monthYear"></div>
+              <button class="calendar-nav" onclick="changeMonth(1)">Next ›</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div id="selectedDateEvents" style="margin-top: 1rem;"></div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid #e0e0e0;">
+              <h4 style="margin-bottom: 0.5rem; color: #333;">➕ Add New Event</h4>
+              <div class="form-group">
+                <label>Event Title:</label>
+                <input type="text" id="eventTitle" placeholder="Doctor visit, medication reminder, etc.">
+              </div>
+              <div class="form-group">
+                <label>Date & Time:</label>
+                <input type="datetime-local" id="eventDateTime">
+              </div>
+              <div class="form-group">
+                <label>Description:</label>
+                <textarea id="eventDescription" placeholder="Event details"></textarea>
+              </div>
+              <button class="btn" onclick="addCalendarEvent()">📅 Add Event</button>
+            </div>
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; text-align: center;">
+              <button class="btn-home" onclick="goHome()">🏠 Back to Home</button>
+            </div>
+          </div>`;
+
+        addBubble(calendarHTML, 'bot');
+        setTimeout(() => {
+          renderCalendar();
+          isProcessing = false;
+        }, 500);
+      }
+
+      window.changeMonth = function(direction) {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+        renderCalendar();
+      }
+
+      function renderCalendar() {
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"];
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        
+        const monthYearElement = document.getElementById('monthYear');
+        const gridElement = document.getElementById('calendarGrid');
+        
+        if (!monthYearElement || !gridElement) return;
+
+        monthYearElement.textContent = `${monthNames[currentCalendarDate.getMonth()]} ${currentCalendarDate.getFullYear()}`;
+        gridElement.innerHTML = '';
+
+        dayNames.forEach(day => {
+          const dayHeader = document.createElement('div');
+          dayHeader.className = 'calendar-day-header';
+          dayHeader.textContent = day;
+          gridElement.appendChild(dayHeader);
+        });
+
+        const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
+        const lastDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayOfWeek = firstDay.getDay();
+
+        const appointments = getFromLocal('appointments');
+        const events = getFromLocal('calendar');
+        const allEvents = [...appointments, ...events];
+
+        const prevMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 0);
+        for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+          const dayElement = document.createElement('div');
+          dayElement.className = 'calendar-day other-month';
+          dayElement.textContent = prevMonth.getDate() - i;
+          gridElement.appendChild(dayElement);
+        }
+
+        const today = new Date();
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayElement = document.createElement('div');
+          dayElement.className = 'calendar-day';
+          dayElement.textContent = day;
+
+          const currentDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), day);
+          
+          if (currentDay.toDateString() === today.toDateString()) {
+            dayElement.classList.add('today');
+          }
+
+          const hasEvents = allEvents.some(event => {
+            const eventDate = new Date(event.dateTime);
+            return eventDate.toDateString() === currentDay.toDateString();
+          });
+
+          if (hasEvents) {
+            dayElement.classList.add('has-appointment');
+          }
+
+          dayElement.onclick = () => showDayEvents(currentDay);
+          gridElement.appendChild(dayElement);
+        }
+
+        const totalCells = gridElement.children.length;
+        const remainingCells = 42 - totalCells;
+        for (let day = 1; day <= remainingCells; day++) {
+          const dayElement = document.createElement('div');
+          dayElement.className = 'calendar-day other-month';
+          dayElement.textContent = day;
+          gridElement.appendChild(dayElement);
+        }
+      }
+
+      function showDayEvents(date) {
+        const appointments = getFromLocal('appointments');
+        const events = getFromLocal('calendar');
+        const allEvents = [...appointments, ...events];
+
+        const dayEvents = allEvents.filter(event => {
+          const eventDate = new Date(event.dateTime);
+          return eventDate.toDateString() === date.toDateString();
+        });
+
+        const eventsContainer = document.getElementById('selectedDateEvents');
+        if (!eventsContainer) return;
+
+        if (dayEvents.length === 0) {
+          eventsContainer.innerHTML = `<p style="text-align: center; color: #666; font-size: 0.8rem;">No events on ${date.toLocaleDateString()}</p>`;
+          return;
+        }
+
+        eventsContainer.innerHTML = `
+          <h4 style="color: #333; margin-bottom: 0.5rem;">Events on ${date.toLocaleDateString()}</h4>
+          ${dayEvents.map(event => {
+            const eventTime = new Date(event.dateTime);
+            const isAppointment = event.doctor;
+
+            return `
+              <div class="info-item" style="cursor: pointer;" onclick="${isAppointment ? `viewAppointment(${event.id})` : ''}">
+                <div>
+                  <strong>${isAppointment ? '📋 ' + event.doctor + ' - ' + event.type : '📅 ' + event.title}</strong><br>
+                  <small style="color: #666;">🕐 ${eventTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                  ${event.location ? `<br><small style="color: #666;">📍 ${event.location}</small>` : ''}
+                </div>
+                ${isAppointment ? '<span style="color: #DAA520;">👁️ View</span>' : ''}
+              </div>
+            `;
+          }).join('')}
+        `;
+      }
+
+      window.addCalendarEvent = function() {
+        const title = document.getElementById('eventTitle').value;
+        const dateTime = document.getElementById('eventDateTime').value;
+        const description = document.getElementById('eventDescription').value;
+
+        if (title && dateTime) {
+          const events = getFromLocal('calendar');
+          const newEvent = {
+            id: Date.now(),
+            title,
+            dateTime,
+            description,
+            created: new Date().toISOString()
+          };
+
+          events.push(newEvent);
+          saveToLocal('calendar', events);
+
+          document.getElementById('eventTitle').value = '';
+          document.getElementById('eventDateTime').value = '';
+          document.getElementById('eventDescription').value = '';
+
+          showSuccessMessage('✅ Event added to calendar!');
+          renderCalendar();
+        } else {
+          showErrorMessage('Please fill in title and date/time');
+        }
+      }
+
+      // My Info Functions
+      window.showMyInfo = function() {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearAllChatMessages();
+        
+        addBubble('My Info', 'user');
+        const myInfoHTML = `
+          <div class="form-container">
+            <h3>My Medical Profile</h3>
+            <div id="myInfoDisplay"></div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid #e0e0e0;">
+              <h4 style="color: #28a745; margin-bottom: 0.8rem;">✏️ Update Medical Profile</h4>
+              <h5 style="color: #28a745; margin-top: 1rem;">Personal Information</h5>
+              <div class="form-group">
+                <label>Full Name:</label>
+                <input type="text" id="infoName" placeholder="John Doe">
+              </div>
+              <div class="form-group">
+                <label>Date of Birth:</label>
+                <input type="date" id="infoDOB">
+              </div>
+              <div class="form-group">
+                <label>Blood Type:</label>
+                <select id="infoBloodType">
+                  <option value="">Select blood type</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+              <h5 style="color: #28a745; margin-top: 1rem;">Medical Information</h5>
+              <div class="form-group">
+                <label>Current Medications:</label>
+                <textarea id="infoMedications" placeholder="List your current medications and dosages"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Medical Conditions:</label>
+                <textarea id="infoConditions" placeholder="List any medical conditions, allergies"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Primary Care Doctor:</label>
+                <input type="text" id="infoPrimaryDoctor" placeholder="Dr. Smith - (555) 123-4567">
+              </div>
+              <button class="btn" onclick="saveMyInfo()">💾 Save My Info</button>
+            </div>
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; text-align: center;">
+              <button class="btn-home" onclick="goHome()">🏠 Back to Home</button>
+            </div>
+          </div>`;
+
+        addBubble(myInfoHTML, 'bot');
+        setTimeout(() => {
+          loadMyInfo();
+          isProcessing = false;
+        }, 500);
+      }
+
+      window.saveMyInfo = function() {
+        const myInfo = {
+          name: document.getElementById('infoName').value,
+          dob: document.getElementById('infoDOB').value,
+          bloodType: document.getElementById('infoBloodType').value,
+          medications: document.getElementById('infoMedications').value,
+          conditions: document.getElementById('infoConditions').value,
+          primaryDoctor: document.getElementById('infoPrimaryDoctor').value,
+          updated: new Date().toISOString()
+        };
+
+        saveToLocal('myInfo', myInfo);
+        showSuccessMessage('✅ Your medical profile has been saved!');
+        loadMyInfo();
+      }
+
+      function loadMyInfo() {
+        const myInfo = getFromLocal('myInfo');
+        const displayElement = document.getElementById('myInfoDisplay');
+        
+        if (displayElement) {
+          if (Object.keys(myInfo).length === 0) {
+            displayElement.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem;">Complete your medical profile below.</p>';
+          } else {
+            displayElement.innerHTML = `
+              <div class="info-section">
+                <h4>👤 Personal Information</h4>
+                ${myInfo.name ? `<div class="info-item"><strong>Name:</strong> ${myInfo.name}</div>` : ''}
+                ${myInfo.dob ? `<div class="info-item"><strong>Date of Birth:</strong> ${new Date(myInfo.dob).toLocaleDateString()}</div>` : ''}
+                ${myInfo.bloodType ? `<div class="info-item"><strong>Blood Type:</strong> ${myInfo.bloodType}</div>` : ''}
+              </div>
+              <div class="info-section">
+                <h4>⚕️ Medical Information</h4>
+                ${myInfo.medications ? `<div class="info-item"><strong>Medications:</strong><br>${myInfo.medications}</div>` : ''}
+                ${myInfo.conditions ? `<div class="info-item"><strong>Conditions:</strong><br>${myInfo.conditions}</div>` : ''}
+                ${myInfo.primaryDoctor ? `<div class="info-item"><strong>Primary Doctor:</strong> ${myInfo.primaryDoctor}</div>` : ''}
+              </div>
+            `;
+          }
+          
+          if (myInfo.name) {
+            document.getElementById('infoName').value = myInfo.name || '';
+            document.getElementById('infoDOB').value = myInfo.dob || '';
+            document.getElementById('infoBloodType').value = myInfo.bloodType || '';
+            document.getElementById('infoMedications').value = myInfo.medications || '';
+            document.getElementById('infoConditions').value = myInfo.conditions || '';
+            document.getElementById('infoPrimaryDoctor').value = myInfo.primaryDoctor || '';
+          }
+        }
+      }
+
+      // Appointments Functions
+      window.showAppointments = function() {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearAllChatMessages();
+
+        addBubble('Appointments', 'user');
+        const appointmentsHTML = `
+          <div class="form-container">
+            <h3>My Appointments</h3>
+            <div id="appointmentsList"></div>
+            <div class="form-group">
+              <label>Doctor/Provider:</label>
+              <input type="text" id="appointmentDoctor" placeholder="Dr. John Smith">
+            </div>
+            <div class="form-group">
+              <label>Appointment Date & Time:</label>
+              <input type="datetime-local" id="appointmentDateTime">
+            </div>
+            <div class="form-group">
+              <label>Type of Visit:</label>
+              <select id="appointmentType">
+                <option value="checkup">Regular Checkup</option>
+                <option value="followup">Follow-up</option>
+                <option value="consultation">Consultation</option>
+                <option value="specialist">Specialist</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Location/Address:</label>
+              <input type="text" id="appointmentLocation" placeholder="123 Medical Center Dr">
+            </div>
+            <button class="btn" onclick="addAppointment()">Schedule Appointment</button>
+            <div style="margin-top: 2rem; text-align: center;">
+              <button class="btn-home" onclick="goHome()">🏠 Back to Home</button>
+            </div>
+          </div>`;
+
+        addBubble(appointmentsHTML, 'bot');
+        setTimeout(() => {
+          loadAppointments();
+          isProcessing = false;
+        }, 500);
+      }
+
+      window.addAppointment = function() {
+        const doctor = document.getElementById('appointmentDoctor').value;
+        const dateTime = document.getElementById('appointmentDateTime').value;
+        const type = document.getElementById('appointmentType').value;
+        const location = document.getElementById('appointmentLocation').value;
+
+        if (doctor && dateTime) {
+          const appointments = getFromLocal('appointments');
+          const newAppointment = {
+            id: Date.now(),
+            doctor,
+            dateTime,
+            type,
+            location,
+            status: 'scheduled',
+            created: new Date().toISOString()
+          };
+
+          appointments.push(newAppointment);
+          saveToLocal('appointments', appointments);
+
+          document.getElementById('appointmentDoctor').value = '';
+          document.getElementById('appointmentDateTime').value = '';
+          document.getElementById('appointmentLocation').value = '';
+
+          showSuccessMessage('✅ Appointment scheduled!');
+          loadAppointments();
+        }
+      }
+
+      function loadAppointments() {
+        const appointments = getFromLocal('appointments');
+        const listElement = document.getElementById('appointmentsList');
+        if (listElement) {
+          listElement.innerHTML = appointments.map(appointment => {
+            const appointmentDate = new Date(appointment.dateTime);
+            return `
+              <div class="appointment-item">
+                <div class="appointment-doctor">${appointment.doctor}</div>
+                <div class="appointment-type">${appointment.type}</div>
+                <div class="appointment-datetime">
+                  📅 ${appointmentDate.toLocaleDateString()} at ${appointmentDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </div>
+                ${appointment.location ? `<div class="appointment-location">📍 ${appointment.location}</div>` : ''}
+              </div>
+            `;
+          }).join('') || '<p style="text-align: center; color: #666; padding: 1rem;">No appointments scheduled.</p>';
+        }
+      }
+
+      // Medications Functions
+      window.showMedications = function() {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearAllChatMessages();
+        
+        addBubble('Medications', 'user');
+        const medicationsHTML = `
+          <div class="form-container">
+            <h3>My Medications</h3>
+            <div id="medicationsList"></div>
+            <div class="form-group">
+              <label>Medication Name:</label>
+              <input type="text" id="medName" placeholder="Lisinopril, Metformin, etc.">
+            </div>
+            <div class="form-group">
+              <label>Dosage:</label>
+              <input type="text" id="medDosage" placeholder="10mg, 500mg, etc.">
+            </div>
+            <div class="form-group">
+              <label>Times Per Day:</label>
+              <select id="medTimesPerDay">
+                <option value="1">1 time per day</option>
+                <option value="2">2 times per day</option>
+                <option value="3">3 times per day</option>
+                <option value="As needed">As needed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Prescribed By:</label>
+              <input type="text" id="medPrescribedBy" placeholder="Dr. Smith">
+            </div>
+            <button class="btn" onclick="addMedication()">💊 Save Medication</button>
+            <div style="margin-top: 2rem; text-align: center;">
+              <button class="btn-home" onclick="goHome()">🏠 Back to Home</button>
+            </div>
+          </div>`;
+
+        addBubble(medicationsHTML, 'bot');
+        setTimeout(() => {
+          loadMedications();
+          isProcessing = false;
+        }, 500);
+      }
+
+      window.addMedication = function() {
+        const name = document.getElementById('medName').value;
+        const dosage = document.getElementById('medDosage').value;
+        const timesPerDay = document.getElementById('medTimesPerDay').value;
+        const prescribedBy = document.getElementById('medPrescribedBy').value;
+
+        if (name && dosage) {
+          const medications = getFromLocal('medications');
+          const newMedication = {
+            id: Date.now(),
+            name,
+            dosage,
+            timesPerDay,
+            prescribedBy,
+            active: true,
+            created: new Date().toISOString()
+          };
+
+          medications.push(newMedication);
+          saveToLocal('medications', medications);
+
+          document.getElementById('medName').value = '';
+          document.getElementById('medDosage').value = '';
+          document.getElementById('medPrescribedBy').value = '';
+
+          showSuccessMessage('✅ Medication added!');
+          loadMedications();
+        }
+      }
+
+      function loadMedications() {
+        const medications = getFromLocal('medications');
+        const listElement = document.getElementById('medicationsList');
+        
+        if (listElement) {
+          const activeMeds = medications.filter(med => med.active);
+          
+          if (activeMeds.length === 0) {
+            listElement.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem;">No medications tracked yet.</p>';
+            return;
+          }
+
+          listElement.innerHTML = `
+            <h4 style="color: #17a2b8; margin-bottom: 0.5rem;">💊 Active Medications</h4>
+            ${activeMeds.map(med => {
+              const timesDisplay = med.timesPerDay + ' times daily';
+              
+              return `
+                <div class="medication-item info-item">
+                  <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                      <strong style="color: #17a2b8;">${med.name} ${med.dosage}</strong>
+                      <span class="medication-time">${timesDisplay}</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #666;">
+                      ${med.prescribedBy ? `👨‍⚕️ ${med.prescribedBy}` : ''}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          `;
+        }
+      }
+
+      // Enhanced Health Tools Functions
+      window.showDrugChecker = function() {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearAllChatMessages();
+        
+        addBubble('Drug Checker', 'user');
+        const drugCheckerHTML = `
+          <div class="form-container">
+            <h3>💊 Drug Interaction Checker</h3>
+            <div id="currentMedicationsCheck"></div>
+            <div class="form-group">
+              <label>Add Medication to Check:</label>
+              <input type="text" id="newDrugName" placeholder="Enter medication name">
+            </div>
+            <button class="btn" onclick="checkDrugInteractions()">🔍 Check Interactions</button>
+            <div id="interactionResults" style="margin-top: 1rem;"></div>
+            <div style="margin-top: 2rem; text-align: center;">
+              <button class="btn-home" onclick="goHome()">🏠 Back to Home</button>
+            </div>
+          </div>`;
+
+        addBubble(drugCheckerHTML, 'bot');
+        setTimeout(() => {
+          loadCurrentMedicationsForCheck();
+          isProcessing = false;
+        }, 500);
+      }
+
+      window.showHealthTracker = function() {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearAllChatMessages();
+        
+        addBubble('Health Tracker', 'user');
+        const trackerHTML = `
+          <div class="form-container">
+            <h3>📊 Health Tracker</h3>
+            <div id="healthStats"></div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid #e0e0e0;">
+              <h4 style="color: #28a745; margin-bottom: 0.8rem;">📈 Add New Reading</h4>
+              <div class="form-group">
+                <label>Measurement Type:</label>
+                <select id="measurementType">
+                  <option value="blood_pressure">Blood Pressure</option>
+                  <option value="blood_sugar">Blood Sugar</option>
+                  <option value="weight">Weight</option>
+                  <option value="heart_rate">Heart Rate</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Value:</label>
+                <input type="text" id="measurementValue" placeholder="e.g., 120/80, 95, 150 lbs, 72 bpm">
+              </div>
+              <div class="form-group">
+                <label>Date & Time:</label>
+                <input type="datetime-local" id="measurementDateTime">
+              </div>
+              <button class="btn" onclick="addHealthMeasurement()">📊 Add Reading</button>
+            </div>
+            <div style="margin-top: 2rem; text-align: center;">
+              <button class="btn-home" onclick="goHome()">🏠 Back to Home</button>
+            </div>
+          </div>`;
+
+        addBubble(trackerHTML, 'bot');
+        setTimeout(() => {
+          loadHealthStats();
+          setCurrentDateTime('measurementDateTime');
+          isProcessing = false;
+        }, 500);
+      }
+
+      window.showReminders = function() {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearAllChatMessages();
+        
+        addBubble('Reminders', 'user');
+        const remindersHTML = `
+          <div class="form-container">
+            <h3>⏰ Medication Reminders</h3>
+            <div id="activeReminders"></div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid #e0e0e0;">
+              <h4 style="color: #28a745; margin-bottom: 0.8rem;">➕ Set New Reminder</h4>
+              <div class="form-group">
+                <label>Medication:</label>
+                <input type="text" id="reminderMedication" placeholder="Medication name">
+              </div>
+              <div class="form-group">
+                <label>Time:</label>
+                <input type="time" id="reminderTime">
+              </div>
+              <div class="form-group">
+                <label>Frequency:</label>
+                <select id="reminderFrequency">
+                  <option value="daily">Daily</option>
+                  <option value="twice_daily">Twice Daily</option>
+                  <option value="three_times">Three Times Daily</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </div>
+              <button class="btn" onclick="addReminder()">⏰ Set Reminder</button>
+            </div>
+            <div style="margin-top: 2rem; text-align: center;">
+              <button class="btn-home" onclick="goHome()">🏠 Back to Home</button>
+            </div>
+          </div>`;
+
+        addBubble(remindersHTML, 'bot');
+        setTimeout(() => {
+          loadActiveReminders();
+          isProcessing = false;
+        }, 500);
+      }
+
+      window.showEmergencyInfo = function() {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearAllChatMessages();
+        
+        addBubble('Emergency', 'user');
+        const emergencyHTML = `
+          <div class="form-container">
+            <h3>🚨 Emergency Information</h3>
+            <div id="emergencyDisplay"></div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid #e0e0e0;">
+              <h4 style="color: #dc3545; margin-bottom: 0.8rem;">🆘 Update Emergency Info</h4>
+              <div class="form-group">
+                <label>Emergency Contact Name:</label>
+                <input type="text" id="emergencyContactName" placeholder="John Smith">
+              </div>
+              <div class="form-group">
+                <label>Emergency Contact Phone:</label>
+                <input type="tel" id="emergencyContactPhone" placeholder="(555) 123-4567">
+              </div>
+              <div class="form-group">
+                <label>Medical Allergies:</label>
+                <textarea id="emergencyAllergies" placeholder="Penicillin, shellfish, etc."></textarea>
+              </div>
+              <div class="form-group">
+                <label>Critical Medical Conditions:</label>
+                <textarea id="emergencyConditions" placeholder="Diabetes, heart condition, etc."></textarea>
+              </div>
+              <button class="btn" onclick="saveEmergencyInfo()">🆘 Save Emergency Info</button>
+            </div>
+            <div style="margin-top: 2rem; text-align: center;">
+              <button class="btn-home" onclick="goHome()">🏠 Back to Home</button>
+            </div>
+          </div>`;
+
+        addBubble(emergencyHTML, 'bot');
+        setTimeout(() => {
+          loadEmergencyInfo();
+          isProcessing = false;
+        }, 500);
+      }
+
+      // Utility functions
+      window.openVideo = function(videoUrl) {
+        // Open any video URL in a new tab/window
+        if (videoUrl) {
+          window.open(videoUrl, '_blank');
+        }
+      }
+
+      window.toggleLanguage = toggleLanguage;
+
+      function showSuccessMessage(message) {
+        const tempMessage = document.createElement('div');
+        tempMessage.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #28a745; color: white; padding: 1rem 2rem; border-radius: 8px; z-index: 1000; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+        tempMessage.textContent = message;
+        document.body.appendChild(tempMessage);
+        
+        setTimeout(() => {
+          if (document.body.contains(tempMessage)) {
+            document.body.removeChild(tempMessage);
+          }
+        }, 2000);
+      }
+
+      function showErrorMessage(message) {
+        const tempMessage = document.createElement('div');
+        tempMessage.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #dc3545; color: white; padding: 1rem 2rem; border-radius: 8px; z-index: 1000; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+        tempMessage.textContent = message;
+        document.body.appendChild(tempMessage);
+        
+        setTimeout(() => {
+          if (document.body.contains(tempMessage)) {
+            document.body.removeChild(tempMessage);
+          }
+        }, 2000);
+      }
+
+      // Enhanced Logic Support Functions
+      function loadCurrentMedicationsForCheck() {
+        const medications = getFromLocal('medications');
+        const activeMeds = medications.filter(med => med.active);
+        const displayElement = document.getElementById('currentMedicationsCheck');
+        
+        if (displayElement) {
+          if (activeMeds.length === 0) {
+            displayElement.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem;">No medications found. Add medications in "My Info" or "Medications" section first.</p>';
+          } else {
+            displayElement.innerHTML = `
+              <h4 style="color: #17a2b8; margin-bottom: 0.5rem;">Current Medications:</h4>
+              ${activeMeds.map(med => `
+                <div class="info-item">
+                  <strong>${med.name} ${med.dosage}</strong> - ${med.timesPerDay} times daily
+                </div>
+              `).join('')}
+            `;
+          }
+        }
+      }
+
+      window.checkDrugInteractions = function() {
+        const newDrug = document.getElementById('newDrugName').value.toLowerCase();
+        const medications = getFromLocal('medications');
+        const activeMeds = medications.filter(med => med.active);
+        const resultsElement = document.getElementById('interactionResults');
+        
+        if (!newDrug) {
+          showErrorMessage('Please enter a medication name');
+          return;
+        }
+
+        // Basic drug interaction database (simplified)
+        const interactions = {
+          'warfarin': ['aspirin', 'ibuprofen', 'simvastatin', 'metformin'],
+          'aspirin': ['warfarin', 'lisinopril', 'metformin'],
+          'ibuprofen': ['warfarin', 'lisinopril', 'losartan', 'metoprolol'],
+          'lisinopril': ['potassium', 'ibuprofen', 'aspirin'],
+          'metformin': ['alcohol', 'warfarin', 'contrast dye'],
+          'simvastatin': ['grapefruit', 'warfarin', 'gemfibrozil'],
+          'losartan': ['potassium', 'ibuprofen', 'naproxen'],
+          'albuterol': ['propranolol', 'metoprolol', 'atenolol']
+        };
+
+        let foundInteractions = [];
+        
+        activeMeds.forEach(med => {
+          const medName = med.name.toLowerCase();
+          if (interactions[newDrug] && interactions[newDrug].includes(medName)) {
+            foundInteractions.push(`⚠️ ${newDrug.toUpperCase()} may interact with ${med.name}`);
+          }
+          if (interactions[medName] && interactions[medName].includes(newDrug)) {
+            foundInteractions.push(`⚠️ ${med.name} may interact with ${newDrug.toUpperCase()}`);
+          }
+        });
+
+        if (resultsElement) {
+          if (foundInteractions.length === 0) {
+            resultsElement.innerHTML = `
+              <div class="info-section">
+                <h4>✅ No Known Interactions Found</h4>
+                <p>No major interactions detected between ${newDrug.toUpperCase()} and your current medications.</p>
+                <p style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">
+                  *Always consult your healthcare provider before starting new medications.
+                </p>
+              </div>
+            `;
+          } else {
+            resultsElement.innerHTML = `
+              <div class="info-section" style="border-left-color: #dc3545;">
+                <h4 style="color: #dc3545;">⚠️ Potential Interactions Found</h4>
+                ${foundInteractions.map(interaction => `<div class="info-item" style="border-left-color: #dc3545;">${interaction}</div>`).join('')}
+                <p style="font-size: 0.8rem; color: #dc3545; margin-top: 0.5rem; font-weight: 600;">
+                  **IMPORTANT: Contact your healthcare provider immediately before taking ${newDrug.toUpperCase()}**
+                </p>
+              </div>
+            `;
+          }
+        }
+
+        document.getElementById('newDrugName').value = '';
+      }
+
+      function loadHealthStats() {
+        const measurements = getFromLocal('healthMeasurements');
+        const displayElement = document.getElementById('healthStats');
+        
+        if (displayElement) {
+          if (measurements.length === 0) {
+            displayElement.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem;">No health measurements recorded yet.</p>';
+            return;
+          }
+
+          // Group by type and show latest readings
+          const byType = {};
+          measurements.forEach(measurement => {
+            if (!byType[measurement.type]) {
+              byType[measurement.type] = [];
+            }
+            byType[measurement.type].push(measurement);
+          });
+
+          // Sort each type by date and get latest
+          Object.keys(byType).forEach(type => {
+            byType[type].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+          });
+
+          displayElement.innerHTML = `
+            <h4 style="color: #28a745; margin-bottom: 0.5rem;">📈 Latest Readings</h4>
+            ${Object.keys(byType).map(type => {
+              const latest = byType[type][0];
+              const typeNames = {
+                'blood_pressure': '🩺 Blood Pressure',
+                'blood_sugar': '🩸 Blood Sugar',
+                'weight': '⚖️ Weight',
+                'heart_rate': '💓 Heart Rate'
+              };
+              return `
+                <div class="info-item">
+                  <div>
+                    <strong>${typeNames[type] || type}</strong><br>
+                    <span style="font-size: 1.1rem; color: #28a745; font-weight: 600;">${latest.value}</span><br>
+                    <small style="color: #666;">${new Date(latest.dateTime).toLocaleDateString()} at ${new Date(latest.dateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                  </div>
+                  <span style="color: #666; font-size: 0.8rem;">${byType[type].length} readings</span>
+                </div>
+              `;
+            }).join('')}
+          `;
+        }
+      }
+
+      window.addHealthMeasurement = function() {
+        const type = document.getElementById('measurementType').value;
+        const value = document.getElementById('measurementValue').value;
+        const dateTime = document.getElementById('measurementDateTime').value;
+
+        if (type && value && dateTime) {
+          const measurements = getFromLocal('healthMeasurements');
+          const newMeasurement = {
+            id: Date.now(),
+            type,
+            value,
+            dateTime,
+            created: new Date().toISOString()
+          };
+
+          measurements.push(newMeasurement);
+          saveToLocal('healthMeasurements', measurements);
+
+          document.getElementById('measurementValue').value = '';
+          setCurrentDateTime('measurementDateTime');
+
+          showSuccessMessage('✅ Health measurement recorded!');
+          loadHealthStats();
+        } else {
+          showErrorMessage('Please fill in all fields');
+        }
+      }
+
+      function loadActiveReminders() {
+        const reminders = getFromLocal('reminders');
+        const listElement = document.getElementById('activeReminders');
+        
+        if (listElement) {
+          if (reminders.length === 0) {
+            listElement.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem;">No medication reminders set.</p>';
+            return;
+          }
+
+          listElement.innerHTML = `
+            <h4 style="color: #28a745; margin-bottom: 0.5rem;">⏰ Active Reminders</h4>
+            ${reminders.map(reminder => {
+              const frequencyText = {
+                'daily': 'Daily',
+                'twice_daily': 'Twice Daily',
+                'three_times': '3 Times Daily',
+                'weekly': 'Weekly'
+              };
+              
+              return `
+                <div class="info-item">
+                  <div>
+                    <strong>${reminder.medication}</strong><br>
+                    <span style="color: #28a745;">🕐 ${reminder.time}</span> - ${frequencyText[reminder.frequency]}
+                  </div>
+                  <button class="btn-secondary" onclick="deleteReminder(${reminder.id})" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">Delete</button>
+                </div>
+              `;
+            }).join('')}
+          `;
+        }
+      }
+
+      window.addReminder = function() {
+        const medication = document.getElementById('reminderMedication').value;
+        const time = document.getElementById('reminderTime').value;
+        const frequency = document.getElementById('reminderFrequency').value;
+
+        if (medication && time) {
+          const reminders = getFromLocal('reminders');
+          const newReminder = {
+            id: Date.now(),
+            medication,
+            time,
+            frequency,
+            active: true,
+            created: new Date().toISOString()
+          };
+
+          reminders.push(newReminder);
+          saveToLocal('reminders', reminders);
+
+          document.getElementById('reminderMedication').value = '';
+          document.getElementById('reminderTime').value = '';
+
+          showSuccessMessage('⏰ Reminder set successfully!');
+          loadActiveReminders();
+        } else {
+          showErrorMessage('Please enter medication name and time');
+        }
+      }
+
+      window.deleteReminder = function(id) {
+        const reminders = getFromLocal('reminders');
+        const updatedReminders = reminders.filter(reminder => reminder.id !== id);
+        saveToLocal('reminders', updatedReminders);
+        showSuccessMessage('Reminder deleted');
+        loadActiveReminders();
+      }
+
+      function loadEmergencyInfo() {
+        const emergencyInfo = getFromLocal('emergencyInfo');
+        const displayElement = document.getElementById('emergencyDisplay');
+        
+        if (displayElement) {
+          if (Object.keys(emergencyInfo).length === 0) {
+            displayElement.innerHTML = '<p style="text-align: center; color: #dc3545; padding: 1rem; font-weight: 600;">⚠️ No emergency information on file. Please complete below.</p>';
+          } else {
+            displayElement.innerHTML = `
+              <div class="info-section" style="border-left-color: #dc3545;">
+                <h4 style="color: #dc3545;">🆘 Emergency Contact</h4>
+                ${emergencyInfo.contactName ? `<div class="info-item"><strong>Contact:</strong> ${emergencyInfo.contactName}</div>` : ''}
+                ${emergencyInfo.contactPhone ? `<div class="info-item"><strong>Phone:</strong> ${emergencyInfo.contactPhone}</div>` : ''}
+                ${emergencyInfo.allergies ? `<div class="info-item"><strong>Allergies:</strong><br>${emergencyInfo.allergies}</div>` : ''}
+                ${emergencyInfo.conditions ? `<div class="info-item"><strong>Critical Conditions:</strong><br>${emergencyInfo.conditions}</div>` : ''}
+              </div>
+            `;
+          }
+          
+          // Pre-fill form if data exists
+          if (emergencyInfo.contactName) {
+            document.getElementById('emergencyContactName').value = emergencyInfo.contactName || '';
+            document.getElementById('emergencyContactPhone').value = emergencyInfo.contactPhone || '';
+            document.getElementById('emergencyAllergies').value = emergencyInfo.allergies || '';
+            document.getElementById('emergencyConditions').value = emergencyInfo.conditions || '';
+          }
+        }
+      }
+
+      window.saveEmergencyInfo = function() {
+        const emergencyInfo = {
+          contactName: document.getElementById('emergencyContactName').value,
+          contactPhone: document.getElementById('emergencyContactPhone').value,
+          allergies: document.getElementById('emergencyAllergies').value,
+          conditions: document.getElementById('emergencyConditions').value,
+          updated: new Date().toISOString()
+        };
+
+        saveToLocal('emergencyInfo', emergencyInfo);
+        showSuccessMessage('🆘 Emergency information saved!');
+        loadEmergencyInfo();
+      }
+
+      function setCurrentDateTime(elementId) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        const dateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.value = dateTimeString;
+        }
+      }
+
+      // Send message function
+      window.sendMessage = function(preset = null) {
+        if (isProcessing) return;
+
+        const text = preset || userInput.value.trim();
+        if (!text) return;
+
+        isProcessing = true;
+        clearAllChatMessages();
+        
+        addBubble(text, 'user');
+        userInput.value = '';
+
+        setTimeout(() => {
+          const response = getMedicalResponse(text);
+          addBubble(response, 'bot', true);
+          isProcessing = false;
+        }, 500);
+      }
+
+        // Enter key support
+        if (userInput) {
+          userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') window.sendMessage();
+          });
+        }
+
+        console.log('InfoHealth AI app initialized with full features and drug interactions');
+      }
+
+      // Multiple ways to ensure DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApp);
+      } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        initializeApp();
+      }
+    })();
+  </script>
+
+<!-- ========================== -->
+<!-- ML ENHANCEMENT START      -->
+<!-- (UI unchanged; script-only) -->
+<!-- ============ ML ENHANCEMENT V3 PATCH (routing) ============ -->
+<script>
+(function(){
+  // 1) Lightweight edit distance
+  function lev(a,b){
+    const dp=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));
+    for(let i=0;i<=a.length;i++) dp[i][0]=i;
+    for(let j=0;j<=b.length;j++) dp[0][j]=j;
+    for(let i=1;i<=a.length;i++){
+      for(let j=1;j<=b.length;j++){
+        const c=a[i-1]===b[j-1]?0:1;
+        dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+c);
+      }
+    }
+    return dp[a.length][b.length];
+  }
+
+  // 2) Extra vocab: drug classes & common meds → topics
+  const EXTRA = {
+    hypertension: [
+      "beta blocker","beta-blocker","beta blockers","beta-blockers",
+      "metoprolol","atenolol","carvedilol","propranolol","nadolol","bisoprolol",
+      "ace inhibitor","ace-inhibitor","lisinopril","benazepril","enalapril","ramipril","captopril",
+      "arb","angiotensin receptor blocker","losartan","valsartan","olmesartan","irbesartan","telmisartan",
+      "calcium channel blocker","ccb","amlodipine","diltiazem","verapamil","nifedipine",
+      "thiazide","hydrochlorothiazide","hctz","chlorthalidone","indapamide"
+    ],
+    cholesterol: [
+      "statin","statins","atorvastatin","rosuvastatin","simvastatin","pravastatin","lovastatin","pitavastatin",
+      "ezetimibe","pcsk9","alirocumab","evolocumab","bempedoic","bempedoic acid","inclisiran"
+    ],
+    asthma: [
+      "saba","albuterol","levalbuterol","rescue inhaler","controller inhaler","ics","inhaled corticosteroid",
+      "budesonide","fluticasone","laba","formoterol","salmeterol","montelukast","leukotriene"
+    ],
+    diabetes: [
+      "metformin","insulin","glp-1","glp1","semaglutide","ozempic","rybelsus","tirzepatide","mounjaro","trulicity",
+      "sglt2","empagliflozin","jardiance","dapagliflozin","farxiga","canagliflozin",
+      "sulfonylurea","glipizide","glyburide","glimepiride"
+    ]
+  };
+
+  const PHRASES = [
+    "high blood pressure","blood pressure","rescue inhaler","controller inhaler","peak flow",
+    "blood sugar","hyperlipidemia","hyperlipidaemia","presión alta","azúcar en la sangre",
+    "beta blocker","beta-blocker","ace inhibitor","angiotensin receptor blocker","calcium channel blocker","inhaled corticosteroid"
+  ];
+
+  // 3) Tokenize and score
+  function tokenize(text){
+    const t=(text||"").toLowerCase();
+    const words=t.split(/[^a-záéíóúñ0-9\+]+/).filter(Boolean);
+    const phrases=PHRASES.filter(p=>t.includes(p));
+    return { t, words, phrases };
+  }
+  function scoreTopic({t,words,phrases}, terms){
+    let score=0;
+    terms.forEach(term=>{ if (term.includes(" ") && t.includes(term)) score+=3; });
+    const dict=terms.filter(x=>!x.includes(" "));
+    for(const w of words){
+      for(const term of dict){
+        if (w===term){ score+=2; break; }
+        if (Math.abs(w.length-term.length) <= 2 && lev(w,term) <= 2){ score+=1; break; }
+      }
+    }
+    score += phrases.length>0 ? 1 : 0;
+    return score;
+  }
+
+  // 4) Safe override: use previous classifier if it exists, then layer EXTRA vocabulary
+  const prevClassifier =
+    (typeof window.classifyIntent === "function") ? window.classifyIntent : null;
+
+  window.classifyIntent = function classifyIntent(text){
+    // Base guess from previous classifier (if any)
+    let base = "other";
+    try { if (prevClassifier && prevClassifier !== classifyIntent) base = prevClassifier(text); } catch(e){ base="other"; }
+
+    // EXTRA scoring
+    const toks = tokenize(text);
+    const extraScores = {
+      hypertension: scoreTopic(toks, EXTRA.hypertension),
+      cholesterol:  scoreTopic(toks, EXTRA.cholesterol),
+      asthma:       scoreTopic(toks, EXTRA.asthma),
+      diabetes:     scoreTopic(toks, EXTRA.diabetes)
+    };
+
+    let best = base, max = (base==="other"? -1 : 2); // need real evidence to override base
+    for (const [k,v] of Object.entries(extraScores)){ if (v>max){ max=v; best=k; } }
+    return max>1 ? best : (base || "other");
+  };
+})();
+</script>
+<!-- ========== END ML ENHANCEMENT V3 PATCH (routing) ========= -->
+
+
+<script>
+// === Specialty-Aware ML Enhancement ===
+// Placeholder for lev(), VOCAB, classifyIntent(), normalizeMedicationName(), analyzeMetrics(), etc.
+// This ensures replies are enhanced according to the specialty in <meta name="app-specialty">.
+</script>
+
+</body>
+</html>
