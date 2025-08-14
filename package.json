@@ -1,0 +1,10 @@
+{
+  "name": "functions",
+  "private": true,
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "dependencies": {
+    "firebase-functions": "^5.0.1",
+    "firebase-admin": "^12.5.0"
+  }
+}
