@@ -1,220 +1,187 @@
-// functions/index.js — Firebase Functions v2 (Node.js 22)
-const { onRequest } = require('firebase-functions/v2/https');
-const { defineSecret } = require('firebase-functions/params');
+// chat.js — frontend glue for InfoHealth AI
+// Make sure this file is referenced by <script src="chat.js" defer></script> in index.html
 
-// ---- Secrets (already set via `firebase functions:secrets:set ...`) ----
-const OPENAI_API_KEY    = defineSecret('OPENAI_API_KEY');
-const ANTHROPIC_API_KEY = defineSecret('ANTHROPIC_API_KEY');
-const GEMINI_API_KEY    = defineSecret('GEMINI_API_KEY');
+// ====== CONFIG ======
+const API_BASE = "https://infomed-ai-backend.onrender.com"; // <- your Render backend
+const DEFAULT_LANG = localStorage.getItem("ih-lang") || "en";
+let CURRENT_LANG = DEFAULT_LANG;
 
-// ---- CORS helper ----
-function allow(res) {
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-}
+// ids that should exist in index.html
+const IDS = {
+  form:        "#chatForm",        // <form id="chatForm">
+  input:       "#chatInput",       // <input id="chatInput">
+  log:         "#chatLog",         // <div id="chatLog">
+  providerSel: "#providerSelect",  // <select id="providerSelect"> (optional)
+  esBtn:       "#btnEs",           // <button id="btnEs">ES</button> (optional)
+  enBtn:       "#btnEn"            // <button id="btnEn">EN</button> (optional)
+};
 
-// ---- Language helpers ----
-function isSpanish(s = '') {
-  const hasAccent = /[áéíóúñü¿¡]/i.test(s);
-  const common = /\b(el|la|los|las|un|una|de|del|al|que|y|para|por|con|sin|cómo|qué|cuándo|dónde|porque|tengo|dolor|neuropatía|diabética|síntomas)\b/i.test(
-    s
-  );
-  return hasAccent || common;
-}
-function buildDirective(lang, specialty) {
-  const base =
-    'You are a careful medical information assistant. Educational only; not medical advice.';
-  const es = 'Responde en español claro y profesional.';
-  const en = 'Respond in concise, plain English.';
-  return [base, lang === 'es' ? es : en, `Specialty context: ${specialty || 'General'}.`].join(
-    ' '
-  );
-}
-
-// ---- Provider calls (using global fetch on Node 22) ----
-async function callOpenAI(apiKey, userMsg, system, model = 'gpt-4o-mini') {
-  const r = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.3,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: userMsg },
-      ],
-    }),
+// ====== API ======
+async function callChat(payload) {
+  const r = await fetch(`${API_BASE}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
   });
-  if (!r.ok) throw new Error(`OpenAI ${r.status}: ${await r.text()}`);
-  const j = await r.json();
-  return j.choices?.[0]?.message?.content?.trim() || '';
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
 }
 
-async function callClaude(apiKey, userMsg, system, model = 'claude-3-5-sonnet-20240620') {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 800,
-      system,
-      messages: [{ role: 'user', content: userMsg }],
-      temperature: 0.3,
-    }),
-  });
-  if (!r.ok) throw new Error(`Claude ${r.status}: ${await r.text()}`);
-  const j = await r.json();
-  const block = j.content?.[0];
-  if (!block) return '';
-  if (block.type === 'text') return (block.text || '').trim();
-  if (block.text) return (block.text || '').trim();
-  return '';
+async function callHealth() {
+  const r = await fetch(`${API_BASE}/health`);
+  return r.json();
 }
 
-async function callGemini(apiKey, userMsg, system, model = 'gemini-1.5-flash-latest') {
-  const prompt = `${system}\n\n${userMsg}`;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
-    apiKey
-  )}`;
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3 },
-    }),
-  });
-  if (!r.ok) throw new Error(`Gemini ${r.status}: ${await r.text()}`);
-  const j = await r.json();
-  const text =
-    j.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') ||
-    j.candidates?.[0]?.content?.parts?.[0]?.text ||
-    '';
-  return (text || '').trim();
+// ====== UI helpers ======
+function $(sel) { return document.querySelector(sel); }
+
+function addBubble(text, who = "ai") {
+  const log = $(IDS.log);
+  const wrap = document.createElement("div");
+  wrap.className = who === "user" ? "bubble user" : "bubble ai";
+  wrap.innerHTML = (who === "ai")
+    ? `<div class="ai-reply"></div>`
+    : `<div class="user-msg"></div>`;
+  const el = wrap.firstElementChild;
+  log.appendChild(wrap);
+  if (who === "ai") typewriter(el, text);
+  else el.textContent = text;
+  log.scrollTop = log.scrollHeight;
+  return wrap;
 }
 
-// ---- /health: quick liveness check ----
-exports.health = onRequest({ region: 'us-central1' }, (req, res) => {
-  allow(res);
-  if (req.method === 'OPTIONS') return res.status(204).send('');
-  return res.json({ ok: true, ts: Date.now() });
-});
-
-// ---- /chat: main endpoint ----
-exports.chat = onRequest(
-  {
-    region: 'us-central1',
-    timeoutSeconds: 60,
-    secrets: [OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY],
-  },
-  async (req, res) => {
-    allow(res);
-    if (req.method === 'OPTIONS') return res.status(204).send('');
-
-    // Friendly GET so you can open in a browser without a 405
-    if (req.method === 'GET') {
-      return res.json({
-        ok: true,
-        usage: 'POST JSON: { "message": "...", "specialty": "General", "prefer": { "lang": "en|es", "provider": "auto|openai|anthropic|gemini" } }',
-        example: {
-          message: 'Neuropatía diabética: síntomas y manejo',
-          specialty: 'General',
-          prefer: { lang: 'es', provider: 'auto' },
-        },
-      });
-    }
-
-    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
-
-    const t0 = Date.now();
-    try {
-      const body = req.body || {};
-      const message = (body.message || '').toString();
-      const specialty = (body.specialty || 'General').toString();
-      const prefer = body.prefer || {};
-
-      if (!message) return res.status(400).json({ error: 'message required' });
-
-      // Language: honor client toggle; if English but looks Spanish, auto-switch
-      let targetLang = prefer.lang === 'es' ? 'es' : 'en';
-      if (targetLang === 'en' && isSpanish(message)) targetLang = 'es';
-
-      const providerPref = (prefer.provider || 'auto').toLowerCase(); // auto|openai|anthropic|gemini
-      const system = buildDirective(targetLang, specialty);
-
-      // secrets
-      const openaiKey = OPENAI_API_KEY.value();
-      const claudeKey = ANTHROPIC_API_KEY.value();
-      const geminiKey = GEMINI_API_KEY.value();
-
-      // Choose order for 'auto' based on what keys exist
-      const autoOrder = [];
-      if (openaiKey) autoOrder.push('openai');
-      if (geminiKey) autoOrder.push('gemini');
-      if (claudeKey) autoOrder.push('anthropic');
-      if (autoOrder.length === 0) autoOrder.push('gemini', 'openai', 'anthropic'); // last-resort order
-
-      const tryOrder = providerPref === 'auto' ? autoOrder : [providerPref];
-
-      let text = '';
-      let used = null;
-      let lastErr = null;
-
-      for (const p of tryOrder) {
-        try {
-          if (p === 'openai') {
-            if (!openaiKey) throw new Error('OPENAI_API_KEY missing');
-            text = await callOpenAI(openaiKey, message, system);
-            used = 'openai';
-            break;
-          }
-          if (p === 'anthropic') {
-            if (!claudeKey) throw new Error('ANTHROPIC_API_KEY missing');
-            text = await callClaude(claudeKey, message, system);
-            used = 'anthropic';
-            break;
-          }
-          if (p === 'gemini') {
-            if (!geminiKey) throw new Error('GEMINI_API_KEY missing');
-            text = await callGemini(geminiKey, message, system);
-            used = 'gemini';
-            break;
-          }
-        } catch (e) {
-          lastErr = e;
-          // continue to next provider
-        }
-      }
-
-      if (!used) {
-        const msg =
-          targetLang === 'es'
-            ? "No pude contactar a los servicios de IA en este momento. Intente de nuevo o toque 'Inicio' para ver contenido de referencia."
-            : 'I couldn’t reach any AI providers right now. Please try again or tap Home to view reference content.';
-        return res
-          .status(200)
-          .json({ text: msg, provider: 'fallback', error: String(lastErr || '') });
-      }
-
-      const ms = Date.now() - t0;
-      return res.status(200).json({ text, provider: used, ms, lang: targetLang });
-    } catch (err) {
-      const ms = Date.now() - t0;
-      console.error('chat error:', err);
-      return res.status(200).json({
-        text: 'I hit an unexpected error. Please try again in a moment.',
-        provider: 'error',
-        ms,
-        error: String(err),
-      });
+// simple typewriter
+function typewriter(el, text, speed = 12) {
+  let i = 0;
+  function step() {
+    if (i <= text.length) {
+      el.textContent = text.slice(0, i);
+      i++;
+      requestAnimationFrame(step);
     }
   }
-);
+  step();
+}
+
+// reset chat for each new question
+function resetChat() {
+  const log = $(IDS.log);
+  if (log) log.innerHTML = "";
+}
+
+// blue home button after AI reply
+function addHomeButton() {
+  const log = $(IDS.log);
+  const btn = document.createElement("button");
+  btn.className = "btn-home";
+  btn.textContent = "🏠 Home";
+  btn.onclick = () => {
+    // If your app has a goHome() implement it; otherwise fallback to reload
+    if (typeof window.goHome === "function") window.goHome();
+    else window.location.reload();
+  };
+  const holder = document.createElement("div");
+  holder.style.textAlign = "center";
+  holder.style.margin = "16px 0";
+  holder.appendChild(btn);
+  log.appendChild(holder);
+}
+
+// banner under each AI answer
+function addDisclaimer() {
+  const log = $(IDS.log);
+  const p = document.createElement("div");
+  p.className = "tiny-banner";
+  p.innerHTML = `Educational only • Not medical advice • Sources on request.`;
+  log.appendChild(p);
+}
+
+// ====== Language handling ======
+function setLang(lang) {
+  CURRENT_LANG = lang;
+  localStorage.setItem("ih-lang", lang);
+  document.documentElement.setAttribute("lang", lang);
+}
+
+function wireLangButtons() {
+  const es = $(IDS.esBtn);
+  const en = $(IDS.enBtn);
+  if (es) es.addEventListener("click", () => setLang("es"));
+  if (en) en.addEventListener("click", () => setLang("en"));
+}
+
+// optional: translate a few static labels if you provided ids/classes in HTML
+function translateStaticUI() {
+  // no-op placeholder; to fully localize static cards you’ll need a key map.
+}
+
+// ====== Boot ======
+window.addEventListener("DOMContentLoaded", async () => {
+  setLang(CURRENT_LANG);
+  translateStaticUI();
+  wireLangButtons();
+
+  // probe backend
+  try {
+    const h = await callHealth();
+    console.log("health:", h);
+  } catch (e) {
+    console.warn("health check failed", e);
+  }
+
+  const form  = $(IDS.form);
+  const input = $(IDS.input);
+  const log   = $(IDS.log);
+  const providerSel = $(IDS.providerSel);
+
+  if (!form || !input || !log) {
+    console.warn("chat.js: missing required elements (#chatForm, #chatInput, #chatLog).");
+    return;
+  }
+
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const msg = (input.value || "").trim();
+    if (!msg) return;
+
+    // always start a fresh conversation per your request
+    resetChat();
+
+    // render user bubble
+    addBubble(msg, "user");
+
+    // build payload
+    const prefer = { lang: CURRENT_LANG };
+    const provider = providerSel?.value?.toLowerCase?.();
+    if (provider && provider !== "auto") prefer.provider = provider;
+
+    // read specialty from <meta name="app-specialty" content="...">
+    const specialty = (document.querySelector('meta[name="app-specialty"]')?.content || "").trim();
+
+    // send
+    try {
+      const t0 = performance.now();
+      const resp = await callChat({ message: msg, specialty, prefer });
+      const dt = Math.round(performance.now() - t0);
+      const text = resp?.text || "(no text)";
+      addBubble(text, "ai");
+      addDisclaimer();
+      addHomeButton();
+
+      // debug footer (toggle with ?debug=1)
+      if (new URLSearchParams(location.search).get("debug")) {
+        const d = document.createElement("div");
+        d.className = "debug-line";
+        d.textContent = `provider=${resp?.provider || "n/a"} • ${dt}ms`;
+        document.querySelector(IDS.log).appendChild(d);
+      }
+    } catch (err) {
+      console.error("chat error:", err);
+      addBubble(`Sorry, I couldn't reach the assistant.\n\n${String(err.message || err)}`, "ai");
+      addHomeButton();
+    } finally {
+      input.value = "";
+      input.focus();
+    }
+  });
+});
