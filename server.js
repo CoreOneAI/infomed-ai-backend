@@ -1,116 +1,95 @@
+// server.js — Express backend for InfoHealth AI
+// Runs on Render (or locally with `npm run dev`).
+// Requires env vars set on Render: OPENAI_API_KEY, (optional) ANTHROPIC_API_KEY, GEMINI_API_KEY
+// Optional: ALLOWED_ORIGINS = https://infomed-one.netlify.app,https://infohealth-ai.netlify.app
+
+// Load .env locally (no effect on Render unless you created a .env)
+try { require("dotenv").config(); } catch {}
+
 const express = require("express");
 const cors = require("cors");
 
+const PORT = process.env.PORT || 10000;
+
 const app = express();
 
-/** ---------- CORS ---------- */
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+// ----- CORS -----
+const allowed = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map(s => s.trim())
   .filter(Boolean);
 
-if (allowedOrigins.length === 0) {
-  allowedOrigins.push(
-    "http://localhost:8080",
-    "http://localhost:8081",
-    "https://infomed-one.netlify.app",
-    "https://infohealth-ai.netlify.app"
-  );
-}
-
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    cb(null, allowedOrigins.includes(origin));
-  },
-  methods: ["GET","POST"],
-  allowedHeaders: ["Content-Type"]
+  origin: function(origin, cb) {
+    if (!origin) return cb(null, true); // curl/Postman or same-origin
+    if (allowed.length === 0) return cb(null, true); // allow all if none configured
+    return allowed.includes(origin) ? cb(null, true) : cb(new Error("Not allowed by CORS"));
+  }
 }));
 
 app.use(express.json({ limit: "1mb" }));
 
-/** ---------- Boot log (helps confirm env on Render) ---------- */
-console.log("Boot: providers", {
-  hasOpenAI: !!process.env.OPENAI_API_KEY,
-  hasAnthropic: !!process.env.ANTHROPIC_API_KEY,
-  hasGemini: !!process.env.GEMINI_API_KEY
-});
+// ----- Provider presence flags -----
+const hasOpenAI    = !!process.env.OPENAI_API_KEY;
+const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
+const hasGemini    = !!process.env.GEMINI_API_KEY;
 
-/** ---------- Health ---------- */
-const CFG = {
-  OPENAI_MODEL:     process.env.OPENAI_MODEL     || "gpt-4o-mini",
-  ANTHROPIC_MODEL:  process.env.ANTHROPIC_MODEL  || "claude-3-haiku-20240307",
-  GEMINI_MODEL:     process.env.GEMINI_MODEL     || "gemini-1.5-flash-latest",
-  ANTHROPIC_VERSION:process.env.ANTHROPIC_VERSION|| "2023-06-01",
-};
-
-app.get("/health", (_req, res) => {
+// ----- Health -----
+app.get("/health", (req, res) => {
   res.json({
     status: "ok",
     expects: "POST /chat with JSON { message, specialty?, prefer? }",
-    hasOpenAI: !!process.env.OPENAI_API_KEY,
-    hasAnthropic: !!process.env.ANTHROPIC_API_KEY,
-    hasGemini: !!process.env.GEMINI_API_KEY,
-    models: {
-      openai: CFG.OPENAI_MODEL,
-      anthropic: CFG.ANTHROPIC_MODEL,
-      gemini: CFG.GEMINI_MODEL
-    }
+    hasOpenAI, hasAnthropic, hasGemini
   });
 });
 
-/** ---------- Friendly GET /chat (stops 404 noise) ---------- */
-app.get("/chat", (_req, res) => {
-  res.status(405).type("text/plain")
-     .send("Use POST /chat with JSON { message, specialty?, prefer? }");
+// Helpful GET handler so a browser click to /chat isn’t confusing
+app.get("/chat", (req, res) => {
+  res.status(405).json({
+    error: "Use POST /chat with JSON { message, specialty?, prefer? }",
+    example: { message: "Neuropatía diabética: síntomas y manejo", prefer: { provider: "openai", lang: "es" } }
+  });
 });
 
-/** ---------- Chat ---------- */
+// Silence favicon noise in logs
+app.get("/favicon.ico", (_req, res) => res.sendStatus(204));
+
+// ----- Core chat route -----
 app.post("/chat", async (req, res) => {
   try {
-    const { message, specialty = "General", prefer = {} } = req.body || {};
-    if (!message) return res.status(400).json({ error: "missing message" });
+    const { message, specialty = "", prefer = {} } = req.body || {};
+    if (!message || typeof message !== "string") {
+      return res.status(400).json({ error: 'Missing "message"' });
+    }
 
-    const lang = (prefer.lang || "en").toLowerCase();
-    const providerReq = (prefer.provider || "auto").toLowerCase();
-    const system = buildSystemPrompt(lang, specialty);
+    let provider = (prefer.provider || "auto").toLowerCase();
+    const lang   = prefer.lang || "en";
 
-    const out = await chooseProvider(providerReq, system, message);
-    out.notice = "Educational only • Not medical advice";
-    out.lang = lang; out.specialty = specialty;
-    res.json(out);
+    if (provider === "auto") {
+      if (hasOpenAI) provider = "openai";
+      else if (hasAnthropic) provider = "anthropic";
+      else if (hasGemini) provider = "gemini";
+      else return res.json({ text: `Echo: ${message}`, provider: "render-test" });
+    }
+
+    let text;
+    if (provider === "openai")       text = await callOpenAI(message, lang, specialty);
+    else if (provider === "anthropic") text = await callAnthropic(message, lang, specialty);
+    else if (provider === "gemini")    text = await callGemini(message, lang, specialty);
+    else throw new Error(`Unknown provider: ${provider}`);
+
+    res.json({ text, provider });
   } catch (err) {
     console.error("chat error:", err);
-    res.status(500).json({ error: "server_error" });
+    res.status(500).json({ error: "Upstream error", details: String(err?.message || err) });
   }
 });
 
-function buildSystemPrompt(lang, specialty) {
-  const langName = lang === "es" ? "español" : "English";
-  return [
-    `You are InfoHealth AI, a careful medical assistant for ${specialty}.`,
-    `Respond only in ${langName}.`,
-    `Be concise, structured, and actionable for laypeople.`,
-    `Do not diagnose; encourage clinician follow-up appropriately.`,
-    `Add brief safety caveats when clinically relevant.`
-  ].join(" ");
-}
-
-async function chooseProvider(providerReq, system, user) {
-  if (providerReq === "openai")    return callOpenAI(system, user);
-  if (providerReq === "anthropic") return callAnthropic(system, user);
-  if (providerReq === "gemini")    return callGemini(system, user);
-
-  if (process.env.OPENAI_API_KEY)    return callOpenAI(system, user);
-  if (process.env.ANTHROPIC_API_KEY) return callAnthropic(system, user);
-  if (process.env.GEMINI_API_KEY)    return callGemini(system, user);
-
-  return { text: `Echo: ${user}`, provider: "render-test" };
-}
-
-// OpenAI
-async function callOpenAI(system, user) {
-  if (!process.env.OPENAI_API_KEY) return { text: `Echo: ${user}`, provider: "openai-missing-key" };
+// ----- Providers (minimal, no SDKs; Node 18+ has fetch built-in) -----
+async function callOpenAI(userMessage, lang, specialty) {
+  if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY missing");
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const sys = `You are a careful clinical assistant. Respond in ${lang}. If unsure, say so. Keep it educational, not medical advice. Specialty: ${specialty || "General"}.`;
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -118,66 +97,67 @@ async function callOpenAI(system, user) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: CFG.OPENAI_MODEL,
-      temperature: 0.2,
+      model,
+      temperature: 0.3,
       messages: [
-        { role: "system", content: system },
-        { role: "user", content: user }
+        { role: "system", content: sys },
+        { role: "user", content: userMessage }
       ]
     })
   });
-  if (!r.ok) throw new Error(`OpenAI ${r.status}: ${await r.text().catch(()=>"<no-body>")}`);
-  const j = await r.json();
-  const text = j?.choices?.[0]?.message?.content?.trim() || "";
-  return { text, provider: "openai", model: CFG.OPENAI_MODEL };
+  if (!r.ok) throw new Error(`OpenAI ${r.status}: ${await r.text()}`);
+  const data = await r.json();
+  return (data.choices?.[0]?.message?.content || "").trim();
 }
 
-// Anthropic
-async function callAnthropic(system, user) {
-  if (!process.env.ANTHROPIC_API_KEY) return { text: `Echo: ${user}`, provider: "anthropic-missing-key" };
+async function callAnthropic(userMessage, lang, specialty) {
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY missing");
+  const model = process.env.ANTHROPIC_MODEL || "claude-3-haiku-20240307";
+  const sys = `You are a careful clinical assistant. Respond in ${lang}. If unsure, say so. Educational only, not medical advice. Specialty: ${specialty || "General"}.`;
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": CFG.ANTHROPIC_VERSION,
+      "anthropic-version": "2023-06-01",
       "content-type": "application/json"
     },
     body: JSON.stringify({
-      model: CFG.ANTHROPIC_MODEL,
+      model,
       max_tokens: 800,
-      temperature: 0.2,
-      system,
-      messages: [{ role: "user", content: user }]
+      temperature: 0.3,
+      system: sys,
+      messages: [{ role: "user", content: userMessage }]
     })
   });
-  if (!r.ok) throw new Error(`Anthropic ${r.status}: ${await r.text().catch(()=>"<no-body>")}`);
-  const j = await r.json();
-  const text = (j?.content?.[0]?.text || "").trim();
-  return { text, provider: "anthropic", model: CFG.ANTHROPIC_MODEL };
+  if (!r.ok) throw new Error(`Anthropic ${r.status}: ${await r.text()}`);
+  const data = await r.json();
+  const parts = data.content?.map(p => p.text).join("\n") || "";
+  return parts.trim();
 }
 
-// Gemini
-async function callGemini(system, user) {
-  if (!process.env.GEMINI_API_KEY) return { text: `Echo: ${user}`, provider: "gemini-missing-key" };
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(CFG.GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`;
+async function callGemini(userMessage, lang, specialty) {
+  if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY missing");
+  const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  const sys = `You are a careful clinical assistant. Respond in ${lang}. If unsure, say so. Educational only, not medical advice. Specialty: ${specialty || "General"}.`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
   const r = await fetch(url, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: `${system}\n\n${user}` }] }],
-      generationConfig: { temperature: 0.2 }
+      contents: [
+        { role: "user", parts: [{ text: `${sys}\n\nUser: ${userMessage}` }] }
+      ],
+      generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
     })
   });
-  if (!r.ok) throw new Error(`Gemini ${r.status}: ${await r.text().catch(()=>"<no-body>")}`);
-  const j = await r.json();
-  const text = j?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-  return { text, provider: "gemini", model: CFG.GEMINI_MODEL };
+  if (!r.ok) throw new Error(`Gemini ${r.status}: ${await r.text()}`);
+  const data = await r.json();
+  const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n") || "";
+  return text.trim();
 }
 
-app.get("/", (_req, res) => res.type("text/plain").send("ok"));
-
-const port = Number(process.env.PORT) || 8080;
-if (!app.locals._listening) {
-  app.locals._listening = true;
-  app.listen(port, () => console.log("listening on", port));
-}
+// ----- Boot -----
+app.listen(PORT, () => {
+  console.log("Boot: providers", { hasOpenAI, hasAnthropic, hasGemini });
+  console.log(`listening on ${PORT}`);
+});
