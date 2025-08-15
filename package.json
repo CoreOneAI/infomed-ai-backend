@@ -1,7 +1,8 @@
 {
-  "name": "infomed-ai-backend",
+  "name": "infomed-backend",
   "private": true,
-  "engines": { "node": "20" },
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
   "scripts": {
     "start": "node server.js",
     "dev": "cross-env PORT=8081 node server.js"
